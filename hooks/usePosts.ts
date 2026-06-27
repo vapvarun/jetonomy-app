@@ -22,6 +22,7 @@ import {
   updatePost,
   type CreatePostBody,
   type FeedResult,
+  type FeedSort,
   type PostSort,
   type UpdatePostBody,
 } from '@/api/posts';
@@ -30,8 +31,18 @@ import type { ListEnvelope } from '@/types/api';
 
 const PAGE_LIMIT = 20;
 
+/**
+ * Dedupe an infinite-query post list by id. Offset pagination can return the
+ * same post on two pages when content shifts between fetches; without this a
+ * FlatList raises "two children with the same key".
+ */
+function dedupeById(posts: Post[]): Post[] {
+  const seen = new Set<number>();
+  return posts.filter((p) => (seen.has(p.id) ? false : (seen.add(p.id), true)));
+}
+
 /** Home feed (cross-space, with space-list fallback baked into getFeed). */
-export function useFeed(sort: PostSort) {
+export function useFeed(sort: FeedSort) {
   const query = useInfiniteQuery<FeedResult, Error>({
     queryKey: ['feed', sort],
     initialPageParam: undefined as number | undefined,
@@ -40,7 +51,7 @@ export function useFeed(sort: PostSort) {
     getNextPageParam: (last) =>
       last.meta.has_more ? last.meta.cursor_next ?? undefined : undefined,
   });
-  const posts: Post[] = query.data?.pages.flatMap((p) => p.data) ?? [];
+  const posts: Post[] = dedupeById(query.data?.pages.flatMap((p) => p.data) ?? []);
   const fallbackSpaceId =
     query.data?.pages[0]?.fallbackSpaceId ?? null;
   return { ...query, posts, fallbackSpaceId };
@@ -61,7 +72,7 @@ export function useSpacePosts(spaceId: number | null, sort: PostSort) {
     getNextPageParam: (last) =>
       last.meta.has_more ? last.meta.cursor_next ?? undefined : undefined,
   });
-  const posts: Post[] = query.data?.pages.flatMap((p) => p.data) ?? [];
+  const posts: Post[] = dedupeById(query.data?.pages.flatMap((p) => p.data) ?? []);
   return { ...query, posts };
 }
 

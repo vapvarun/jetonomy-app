@@ -17,15 +17,15 @@ import { Plus } from 'lucide-react-native';
 
 import PostCard, { PostCardSkeleton } from '@/components/PostCard';
 import { useFeed } from '@/hooks/usePosts';
-import type { PostSort } from '@/api/posts';
+import type { FeedSort } from '@/api/posts';
 import { useTheme } from '@/theme/ThemeContext';
 
 type SortKey = 'hot' | 'new' | 'top';
 
-const SORTS: { key: SortKey; label: string; server: PostSort }[] = [
-  { key: 'hot', label: 'Hot', server: 'popular' },
-  { key: 'new', label: 'New', server: 'latest' },
-  { key: 'top', label: 'Top', server: 'popular' },
+const SORTS: { key: SortKey; label: string; server: FeedSort }[] = [
+  { key: 'hot', label: 'Hot', server: 'hot' },
+  { key: 'new', label: 'New', server: 'new' },
+  { key: 'top', label: 'Top', server: 'top' },
 ];
 
 export default function HomeScreen() {
@@ -35,7 +35,7 @@ export default function HomeScreen() {
 
   const [sortKey, setSortKey] = useState<SortKey>('hot');
   const serverSort = useMemo(
-    () => SORTS.find((s) => s.key === sortKey)?.server ?? 'latest',
+    () => SORTS.find((s) => s.key === sortKey)?.server ?? 'hot',
     [sortKey]
   );
 

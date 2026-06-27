@@ -168,10 +168,24 @@ export async function setIdeaStatus(id: number, status: IdeaStatus): Promise<Pos
 // fallback resolves a default space and reads its posts (master-plan Note #1).
 // ---------------------------------------------------------------------------
 
+/**
+ * Sort vocabulary for the cross-space home feed (plugin 1.6.0 `GET /feed`).
+ * The endpoint validates an enum of exactly these — sending a `PostSort`
+ * (`popular`/`latest`) yields `rest_invalid_param: sort`.
+ */
+export type FeedSort = 'hot' | 'new' | 'top';
+
+/** Maps a feed sort to the nearest space-`/posts` sort for the 404 fallback. */
+const FEED_TO_POST_SORT: Record<FeedSort, PostSort> = {
+  hot: 'popular',
+  new: 'latest',
+  top: 'popular',
+};
+
 export interface FeedQuery {
   limit?: number;
   after?: number;
-  sort?: PostSort;
+  sort?: FeedSort;
 }
 
 /** Minimal space row used by the feed fallback + compose space picker. */
@@ -237,7 +251,7 @@ export async function getFeed(q: FeedQuery = {}): Promise<FeedResult> {
       const list = await listSpacePosts(spaceId, {
         limit: q.limit,
         after: q.after,
-        sort: q.sort,
+        sort: q.sort ? FEED_TO_POST_SORT[q.sort] : undefined,
       });
       return { ...list, fallbackSpaceId: spaceId };
     }
