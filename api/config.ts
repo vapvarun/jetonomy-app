@@ -2,7 +2,10 @@
 
 import { client, coreClient } from '@/api/client';
 import type { AppConfig, AppFeatures, SiteIndex } from '@/types/config';
-import { DEFAULT_ACCENT } from '@/theme/colors';
+// White-label seed: ACCENT/DARK_MODE_DEFAULT come from theme/branding.ts (baked
+// by scripts/inject-branding.js). Generic build = '#3B82F6' / false. This makes
+// the app branded BEFORE /app/config loads and on any 404 fallback.
+import { ACCENT, DARK_MODE_DEFAULT } from '@/theme/branding';
 
 /** All Pro features OFF — the safe baseline for free sites / 404 / parse failure. */
 export const DEFAULT_FEATURES: AppFeatures = {
@@ -16,10 +19,10 @@ export const DEFAULT_FEATURES: AppFeatures = {
 };
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
-  accent_color: DEFAULT_ACCENT,
+  accent_color: ACCENT,
   logo_url: null,
   login_bg_url: null,
-  dark_mode_default: false,
+  dark_mode_default: DARK_MODE_DEFAULT,
   pro_active: false,
   features: { ...DEFAULT_FEATURES },
 };

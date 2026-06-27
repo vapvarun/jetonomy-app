@@ -16,9 +16,13 @@ import {
   clearCreds,
   setActiveSite,
 } from '@/utils/secureStore';
+import { SITE_URL, SITE_URL_HARDCODED } from '@/theme/branding';
 import type { Credentials } from '@/types/auth';
 import type { AppConfig, AppFeatures, SiteIndex } from '@/types/config';
 import type { Me } from '@/types/user';
+
+/** Normalized baked site URL for white-label builds (trailing slash stripped). */
+const HARDCODED_SITE_URL = SITE_URL.replace(/\/+$/, '');
 
 /** One per-site session. App-password secret lives in SecureStore, keyed by siteUrl. */
 export interface Session {
@@ -68,6 +72,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const index = await loadSitesIndex();
       const active = index.activeSiteUrl;
       if (!active) {
+        // White-label build: no saved creds yet. Point the clients at the baked
+        // site and seed a branded session shell so the login screen + theme use
+        // SITE_URL without site discovery. The member still authenticates.
+        if (SITE_URL_HARDCODED && HARDCODED_SITE_URL) {
+          configureClients({ siteUrl: HARDCODED_SITE_URL });
+          set({
+            sites: { [HARDCODED_SITE_URL]: emptySession(HARDCODED_SITE_URL) },
+            activeSiteUrl: null,
+            status: 'unauthed',
+          });
+          return;
+        }
         set({ status: 'unauthed' });
         return;
       }

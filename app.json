@@ -43,6 +43,12 @@
       ],
       "expo-asset",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_VIA_eas_init"
+      },
+      "ownerNote": "Set expo.owner to your Expo account or org slug before EAS builds. Running `eas init` populates expo.owner + extra.eas.projectId automatically (see EAS-SETUP.md). The push token code treats the REPLACE_VIA_eas_init placeholder as 'no projectId'."
+    }
   }
 }

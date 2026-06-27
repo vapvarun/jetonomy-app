@@ -1,0 +1,41 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "//": "Customer-supplied: Apple. ascAppId = App Store Connect app id (numeric); appleTeamId = 10-char Apple Developer Team ID. Provide the Apple ID via `eas submit` prompt or EXPO_APPLE_ID env / EAS secret.",
+        "ascAppId": "REPLACE_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "REPLACE_APPLE_TEAM_ID"
+      },
+      "android": {
+        "//": "Customer-supplied: Google. serviceAccountKeyPath = path to the Google Play service-account JSON with the 'Service Account User' + release permissions. track = internal | alpha | beta | production.",
+        "serviceAccountKeyPath": "REPLACE_PATH_TO_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON",
+        "track": "internal"
+      }
+    }
+  }
+}

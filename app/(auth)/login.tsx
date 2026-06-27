@@ -1,10 +1,15 @@
 // app/(auth)/login.tsx — site-discovery-first, multi-tenant login.
 //
-// Flow: enter Site URL -> verifyJetonomySite() -> collect username + Application
-// Password -> authStore.signIn() (validates creds via core wp/v2/users/me).
-// __DEV__ prefills forums.local; in production the field starts empty.
-// White-label builds (APP_SITE.hardcoded) would hide the Site URL field — not
-// wired here since the build-time constant is owned by the Laravel builder.
+// Flow: enter Site URL -> verifyJetonomySite() -> CONNECT.
+// The primary "Connect" path opens the WP-core Application Passwords authorize
+// screen (utils/appPasswordAuth.connectWithAppPassword) in a secure auth
+// session; on approval WP redirects to <scheme>://auth with the App Password,
+// which we validate via core wp/v2/users/me and store through authStore.signIn.
+// Manual app-password entry stays available as a fallback.
+//
+// White-label builds (branding.SITE_URL_HARDCODED) skip the Site URL phase +
+// discovery and go straight to Connect for the baked SITE_URL. Generic builds
+// __DEV__-prefill forums.local; production starts empty.
 
 import { useState } from 'react';
 import {
@@ -18,26 +23,42 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as WebBrowser from 'expo-web-browser';
 
 import { login } from '@/api/auth';
 import { toApiError } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
 import { useTheme } from '@/theme/ThemeContext';
+import { SITE_URL, SITE_URL_HARDCODED } from '@/theme/branding';
 import { verifyJetonomySite, type SiteValidation } from '@/utils/apiDiscovery';
+import { connectWithAppPassword } from '@/utils/appPasswordAuth';
 
 type Phase = 'site' | 'credentials';
 
 const DEV_SITE = __DEV__ ? 'http://forums.local' : '';
+
+/** Synthetic SiteValidation for a white-label baked site (no discovery needed). */
+const HARDCODED_SITE: SiteValidation | null =
+  SITE_URL_HARDCODED && SITE_URL
+    ? {
+        ok: true,
+        hasJetonomy: true,
+        siteName: null,
+        siteIcon: null,
+        siteUrl: SITE_URL.replace(/\/+$/, ''),
+      }
+    : null;
 
 export default function LoginScreen() {
   const { colors, spacing, radius, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const signIn = useAuthStore((s) => s.signIn);
 
-  const [phase, setPhase] = useState<Phase>('site');
-  const [siteInput, setSiteInput] = useState(DEV_SITE);
-  const [site, setSite] = useState<SiteValidation | null>(null);
+  const [phase, setPhase] = useState<Phase>(
+    SITE_URL_HARDCODED ? 'credentials' : 'site'
+  );
+  const [siteInput, setSiteInput] = useState(SITE_URL_HARDCODED ? '' : DEV_SITE);
+  const [site, setSite] = useState<SiteValidation | null>(HARDCODED_SITE);
+  const [manual, setManual] = useState(false);
   const [username, setUsername] = useState('');
   const [appPassword, setAppPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -61,30 +82,56 @@ export default function LoginScreen() {
     }
   }
 
-  async function handleSignIn() {
+  /** Primary path — open the WP authorize screen and store the granted App Password. */
+  async function handleConnect() {
+    if (!site) return;
+    setError(null);
+    setBusy(true);
+    try {
+      const result = await connectWithAppPassword(site.siteUrl);
+      if (result.type === 'cancel') {
+        return; // user dismissed the sheet — silent, let them retry
+      }
+      if (result.type === 'rejected') {
+        setError(
+          'Authorization was declined. Try again, or use an application password below.'
+        );
+        return;
+      }
+      const { siteUrl, user, password } = result.creds;
+      const me = await login(siteUrl, user, password); // validates via core users/me
+      await signIn(siteUrl, user, password, me);
+      // Root layout's auth gate routes to the tabs on status === 'authed'.
+    } catch (e) {
+      const apiErr = toApiError(e);
+      setError(
+        apiErr.status === 401
+          ? 'Those credentials were rejected by the site.'
+          : apiErr.message
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  /** Fallback path — manual username + Application Password entry. */
+  async function handleManualSignIn() {
     if (!site) return;
     setError(null);
     setBusy(true);
     try {
       const me = await login(site.siteUrl, username.trim(), appPassword.trim());
       await signIn(site.siteUrl, username.trim(), appPassword.trim(), me);
-      // Root layout's auth gate routes to the tabs on status === 'authed'.
     } catch (e) {
       const apiErr = toApiError(e);
-      if (apiErr.status === 401) {
-        setError('Wrong username or application password.');
-      } else {
-        setError(apiErr.message);
-      }
+      setError(
+        apiErr.status === 401
+          ? 'Wrong username or application password.'
+          : apiErr.message
+      );
     } finally {
       setBusy(false);
     }
-  }
-
-  function openAppPasswordHelp() {
-    if (!site) return;
-    const url = `${site.siteUrl}/wp-admin/authorize-application.php?app_name=Jetonomy`;
-    void WebBrowser.openBrowserAsync(url);
   }
 
   const inputStyle = {
@@ -103,6 +150,11 @@ export default function LoginScreen() {
     fontSize: typography.size.sm,
     fontWeight: typography.weight.medium as '500',
     marginBottom: spacing[1],
+  } as const;
+
+  const linkStyle = {
+    color: colors.accent,
+    fontSize: typography.size.sm,
   } as const;
 
   return (
@@ -159,7 +211,52 @@ export default function LoginScreen() {
               returnKeyType="next"
             />
           </View>
+        ) : !manual ? (
+          // Primary connect path.
+          <View style={{ gap: spacing[3] }}>
+            <Pressable
+              onPress={handleConnect}
+              disabled={busy}
+              style={{
+                backgroundColor: colors.accent,
+                borderRadius: radius.md,
+                paddingVertical: spacing[4],
+                alignItems: 'center',
+                opacity: busy ? 0.7 : 1,
+              }}
+            >
+              {busy ? (
+                <ActivityIndicator color={colors.accentFg} />
+              ) : (
+                <Text
+                  style={{
+                    color: colors.accentFg,
+                    fontSize: typography.size.base,
+                    fontWeight: typography.weight.semibold as '600',
+                  }}
+                >
+                  Connect with WordPress
+                </Text>
+              )}
+            </Pressable>
+            <Text style={{ color: colors.textMuted, fontSize: typography.size.sm }}>
+              You’ll approve access in your community’s login, then come straight
+              back — no password to copy.
+            </Text>
+            <Pressable
+              onPress={() => {
+                setManual(true);
+                setError(null);
+              }}
+              disabled={busy}
+              hitSlop={8}
+              style={{ marginTop: spacing[2] }}
+            >
+              <Text style={linkStyle}>Use an application password instead</Text>
+            </Pressable>
+          </View>
         ) : (
+          // Fallback manual app-password path.
           <View style={{ gap: spacing[4] }}>
             <View style={{ gap: spacing[2] }}>
               <Text style={labelStyle}>Username or email</Text>
@@ -186,19 +283,18 @@ export default function LoginScreen() {
                 secureTextEntry
                 style={inputStyle}
                 editable={!busy}
-                onSubmitEditing={handleSignIn}
+                onSubmitEditing={handleManualSignIn}
                 returnKeyType="go"
               />
             </View>
-            <Pressable onPress={openAppPasswordHelp} hitSlop={8}>
-              <Text
-                style={{
-                  color: colors.accent,
-                  fontSize: typography.size.sm,
-                }}
-              >
-                How to get an Application Password
-              </Text>
+            <Pressable
+              onPress={() => {
+                setManual(false);
+                setError(null);
+              }}
+              hitSlop={8}
+            >
+              <Text style={linkStyle}>Connect with WordPress instead</Text>
             </Pressable>
           </View>
         )}
@@ -215,37 +311,41 @@ export default function LoginScreen() {
           </Text>
         ) : null}
 
-        <Pressable
-          onPress={phase === 'site' ? handleVerifySite : handleSignIn}
-          disabled={busy}
-          style={{
-            backgroundColor: colors.accent,
-            borderRadius: radius.md,
-            paddingVertical: spacing[4],
-            alignItems: 'center',
-            marginTop: spacing[6],
-            opacity: busy ? 0.7 : 1,
-          }}
-        >
-          {busy ? (
-            <ActivityIndicator color={colors.accentFg} />
-          ) : (
-            <Text
-              style={{
-                color: colors.accentFg,
-                fontSize: typography.size.base,
-                fontWeight: typography.weight.semibold as '600',
-              }}
-            >
-              {phase === 'site' ? 'Continue' : 'Sign in'}
-            </Text>
-          )}
-        </Pressable>
+        {/* Primary CTA for the site + manual phases (connect phase has its own button). */}
+        {phase === 'site' || manual ? (
+          <Pressable
+            onPress={phase === 'site' ? handleVerifySite : handleManualSignIn}
+            disabled={busy}
+            style={{
+              backgroundColor: colors.accent,
+              borderRadius: radius.md,
+              paddingVertical: spacing[4],
+              alignItems: 'center',
+              marginTop: spacing[6],
+              opacity: busy ? 0.7 : 1,
+            }}
+          >
+            {busy ? (
+              <ActivityIndicator color={colors.accentFg} />
+            ) : (
+              <Text
+                style={{
+                  color: colors.accentFg,
+                  fontSize: typography.size.base,
+                  fontWeight: typography.weight.semibold as '600',
+                }}
+              >
+                {phase === 'site' ? 'Continue' : 'Sign in'}
+              </Text>
+            )}
+          </Pressable>
+        ) : null}
 
-        {phase === 'credentials' ? (
+        {phase === 'credentials' && !SITE_URL_HARDCODED ? (
           <Pressable
             onPress={() => {
               setPhase('site');
+              setManual(false);
               setError(null);
             }}
             disabled={busy}

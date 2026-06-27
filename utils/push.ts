@@ -69,11 +69,15 @@ function projectId(): string | undefined {
   const extra =
     (Constants.expoConfig?.extra as { eas?: { projectId?: string } } | undefined) ??
     undefined;
-  return (
+  const id =
     extra?.eas?.projectId ??
     (Constants as unknown as { easConfig?: { projectId?: string } }).easConfig
-      ?.projectId
-  );
+      ?.projectId;
+  // The scaffolded app.json ships a "REPLACE_VIA_eas_init" placeholder until the
+  // owner runs `eas init`. Treat any placeholder as "no projectId" so
+  // getExpoPushTokenAsync isn't called with a value that can't mint a token.
+  if (!id || id.startsWith('REPLACE')) return undefined;
+  return id;
 }
 
 /**
