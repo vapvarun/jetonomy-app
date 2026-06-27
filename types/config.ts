@@ -13,6 +13,8 @@ export interface AppFeatures {
 
 /** GET /jetonomy/v1/app/config (plugin 1.6.0; 404 -> DEFAULT_APP_CONFIG). */
 export interface AppConfig {
+  /** Community name (Settings → General → Community Title); shown in-app. */
+  app_name: string | null;
   accent_color: string;
   logo_url: string | null;
   login_bg_url: string | null;

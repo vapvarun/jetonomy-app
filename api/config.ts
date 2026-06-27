@@ -19,6 +19,7 @@ export const DEFAULT_FEATURES: AppFeatures = {
 };
 
 export const DEFAULT_APP_CONFIG: AppConfig = {
+  app_name: null,
   accent_color: ACCENT,
   logo_url: null,
   login_bg_url: null,
@@ -37,6 +38,7 @@ export async function getAppConfig(): Promise<AppConfig> {
     const res = await client.get<Partial<AppConfig>>('/app/config');
     const data = res.data ?? {};
     return {
+      app_name: data.app_name ?? null,
       accent_color: data.accent_color || DEFAULT_APP_CONFIG.accent_color,
       logo_url: data.logo_url ?? null,
       login_bg_url: data.login_bg_url ?? null,
