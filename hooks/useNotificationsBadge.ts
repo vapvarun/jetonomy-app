@@ -1,10 +1,13 @@
-// hooks/useNotificationsBadge.ts — STUB seam (foundation).
+// hooks/useNotificationsBadge.ts — tab-badge unread count (Notifications domain 04).
 //
-// The tab shell reserves the Notifications tabBarBadge slot but does not own the
-// unread-count endpoint. The Notifications domain (04) OVERWRITES this hook to
-// poll GET /notifications/unread-count. Until then it returns 0 so the shell
-// bundles green with no badge.
+// Foundation reserved this hook as a stub returning 0; the Notifications domain
+// OVERWRITES it to poll GET /notifications/unread-count via React Query. The tab
+// shell (app/(tabs)/_layout.tsx) reads it for the Bell tabBarBadge. Shares the
+// ['notifications','unread'] cache key with useUnreadCount so there is one poll.
+
+import { useUnreadCount } from '@/hooks/useNotifications';
 
 export function useNotificationsBadge(): number {
-  return 0;
+  const { data } = useUnreadCount();
+  return data ?? 0;
 }

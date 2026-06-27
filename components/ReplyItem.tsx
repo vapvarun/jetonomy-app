@@ -7,6 +7,7 @@ import { Check, CheckCircle2, Pencil, Quote, Trash2 } from 'lucide-react-native'
 import ContentBody from '@/components/ContentBody';
 import VoteButton from '@/components/VoteButton';
 import ReactionBar from '@/components/ReactionBar';
+import FlagButton from '@/components/FlagButton';
 import { useTheme } from '@/theme/ThemeContext';
 import type { Reply } from '@/types/reply';
 
@@ -122,6 +123,9 @@ export default function ReplyItem({
             <Action label="Delete" icon={<Trash2 color={colors.danger} size={16} />} onPress={() => onDelete?.(reply.id)} color={colors.danger} />
           </>
         ) : null}
+
+        {/* Member report action (server-gated: 403 hides it). */}
+        {!isOptimistic ? <FlagButton target={{ kind: 'reply', id: reply.id }} compact /> : null}
       </View>
     </View>
   );

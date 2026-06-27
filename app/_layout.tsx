@@ -13,6 +13,7 @@ import { queryClient } from '@/api/queryClient';
 import { ThemeProvider, useTheme } from '@/theme/ThemeContext';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 function Splash() {
   const { colors } = useTheme();
@@ -35,6 +36,10 @@ function RootNavigator() {
   const segments = useSegments();
   const router = useRouter();
   const { scheme } = useTheme();
+
+  // Native push: foreground handler, device registration, and tap deep-links
+  // into native routes (warm + cold start). Self-guards on auth + push support.
+  usePushNotifications();
 
   useEffect(() => {
     if (status === 'unknown') return;

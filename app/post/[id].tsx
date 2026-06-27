@@ -29,6 +29,7 @@ import ContentBody from '@/components/ContentBody';
 import VoteButton from '@/components/VoteButton';
 import ReactionBar from '@/components/ReactionBar';
 import PollView from '@/components/PollView';
+import FlagButton from '@/components/FlagButton';
 import ReplyItem from '@/components/ReplyItem';
 import Composer from '@/components/Composer';
 import {
@@ -221,6 +222,11 @@ export default function PostDetailScreen() {
       {/* Pro seams (null unless feature on) */}
       <ReactionBar target={{ kind: 'post', id: post.id }} seed={post.reactions as never} />
       <PollView postId={post.id} seed={post.poll as never} />
+
+      {/* Member report action (server-gated: 403 hides it). */}
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <FlagButton target={{ kind: 'post', id: post.id }} />
+      </View>
 
       {/* Reply sort */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2], marginTop: spacing[2] }}>
