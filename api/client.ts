@@ -92,6 +92,18 @@ export function getActiveSiteUrl(): string | null {
  * surface their `code` verbatim so the UI can branch.
  */
 export function toApiError(e: unknown): ApiError {
+  // Idempotent: a lower layer may already have converted + re-thrown an
+  // ApiError (plain object). Don't re-wrap it into "Unknown error.".
+  if (
+    e != null &&
+    typeof e === 'object' &&
+    !axios.isAxiosError(e) &&
+    'code' in e &&
+    'status' in e &&
+    typeof (e as { message?: unknown }).message === 'string'
+  ) {
+    return e as ApiError;
+  }
   if (axios.isAxiosError(e)) {
     const err = e as AxiosError<{ code?: string; message?: string; data?: unknown }>;
     const status = err.response?.status ?? 0;

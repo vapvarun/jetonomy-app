@@ -267,6 +267,9 @@ export default function LoginScreen() {
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="off"
+                textContentType="none"
+                importantForAutofill="no"
                 style={inputStyle}
                 editable={!busy}
               />
@@ -280,6 +283,9 @@ export default function LoginScreen() {
                 placeholderTextColor={colors.textMuted}
                 autoCapitalize="none"
                 autoCorrect={false}
+                autoComplete="off"
+                textContentType="none"
+                importantForAutofill="no"
                 secureTextEntry
                 style={inputStyle}
                 editable={!busy}

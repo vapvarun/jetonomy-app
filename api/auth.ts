@@ -5,6 +5,7 @@
 // public jetonomy /users/me route (permission __return_true — never rejects).
 
 import { client, coreClient, configureClients, clearClientAuth, toApiError } from '@/api/client';
+import type { ApiError } from '@/api/client';
 import type { AuthMessageResponse, RegisterInput } from '@/types/auth';
 import type { Me } from '@/types/user';
 
@@ -22,7 +23,14 @@ export async function login(
     // 200 = valid App Password; 401 = bad creds (WP core).
     await coreClient.get('/wp/v2/users/me', { params: { context: 'edit' } });
   } catch (e) {
-    throw toApiError(e);
+    const err = toApiError(e);
+    // WP returns 401 (rest_not_logged_in / incorrect creds) for a wrong username
+    // or an invalid Application Password — surface a clear, actionable message
+    // instead of WP's "You are not currently logged in." / a generic fallback.
+    if (err.status === 401) {
+      throw { ...err, message: 'Wrong username or application password.' } as ApiError;
+    }
+    throw err;
   }
   // Creds are good — hydrate the Jetonomy `Me` shape.
   return getMe();
