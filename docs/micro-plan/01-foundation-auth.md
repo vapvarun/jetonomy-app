@@ -224,3 +224,14 @@ Expo-router `Tabs`. **Tab contract — sibling domains fill the screen files; th
 | GET `/wp/v2/users/me?context=edit` (core) | `api/auth.ts → login()` | Application Password validator (401 on bad creds) |
 | GET `/app/config` (jetonomy 1.6.0, not in 1.4.3) | `api/config.ts → getAppConfig()` | feature gating; **404 → `DEFAULT_APP_CONFIG` fallback** |
 | POST/DELETE `/push/register-device` (pro 1.6.0) | **n/a here** | native push owned by Notifications/Pro domain |
+
+---
+
+## Addendum — Multi-tenant / multi-site (governed by `00-MASTER-PLAN.md` §0)
+
+This is a **site-agnostic public-distribution** app (any Jetonomy site), plus white-label per-site builds — not a single-site app. Foundation implications:
+
+- **`authStore` holds many sessions, one active.** Shape: `{ sites: Record<siteUrl, Session>, activeSiteUrl: string | null }` where `Session = { siteUrl, user, appPasswordRef, appConfig }`. `configureClients()` switches to the active session. v1 UI may show one active site with "add / switch site," but the store must not assume a single credential. App-password secrets live in SecureStore keyed by `siteUrl`.
+- **Login is site-discovery first.** `app/(auth)/login.tsx`: enter site URL → `utils/apiDiscovery.validateJetonomy(url)` (`GET {url}/wp-json/jetonomy/v1`, require HTTPS unless host resolves to a `local` env) → only then collect username + Application Password. Clear errors for non-Jetonomy / unreachable / `Authorization`-stripped hosts.
+- **`forums.local` is a dev prefill only**, behind `__DEV__`; never a hardcoded constant in shared code.
+- **White-label build** sets a build-time `APP_SITE = { url, hardcoded:true, branding }` (from the Laravel build-config). When `APP_SITE.hardcoded`, login hides the Site URL field + skips discovery and seeds the single session from `APP_SITE`; theme seeds from baked branding, then refreshes from `/app/config`. Same screens, same logic — only the entry differs.

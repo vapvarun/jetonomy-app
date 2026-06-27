@@ -7,6 +7,22 @@ This file is the index + coverage proof + build order. Each domain has a full fi
 
 ---
 
+## 0. Distribution & tenancy model (READ FIRST — governs everything)
+
+**The app is site-agnostic, multi-tenant, public distribution. It is NOT built for any one site.** Two ship targets, one codebase:
+
+1. **Generic public app** — a single app published on the App Store / Play Store. A member opens it, **enters their own community's site URL**, the app validates it's a Jetonomy site (`GET {url}/wp-json/jetonomy/v1`), authenticates with a per-site **Application Password**, pulls that site's branding/features from `{url}/wp-json/jetonomy/v1/app/config`, and runs. Like the WordPress / Mastodon apps. **Nothing site-specific is compiled in.**
+2. **White-label builds** — any site owner uses the Laravel builder (`jetonomy-app-server`) to generate **their own** branded app from the same codebase: site URL hardcoded, branding/colors/icon baked at build time, published under their own name for their members.
+
+**Consequences baked into the design (do not violate):**
+- `siteUrl` is always runtime state (from the login field, or the white-label build-time constant) — never a hardcoded constant in shared code. `forums.local` is a **dev/test target only**, never special-cased.
+- The app must tolerate **any** Jetonomy version: a site on 1.4.x has no `/app/config`, `/feed`, or native push → every such call is **404-graceful with sensible fallback** (already specced). Feature presence is per-site, detected at runtime (`/app/config.features` + route presence), never assumed.
+- Connecting to **arbitrary user-entered sites over the public internet**: require HTTPS for real sites (App Passwords need it; `forums.local` is exempt as `local` env), validate the URL is Jetonomy before asking for credentials, fail clearly on non-Jetonomy / unreachable / blocked-Authorization-header sites.
+- **Multi-site membership** (a user in several Jetonomy communities): `authStore` must be shaped to hold **multiple saved site sessions** with one active, switchable — not a single global credential. (v1 may surface one active site with add/switch; the store shape must not preclude many. This is a design constraint, flagged in `01-foundation-auth.md`.)
+- White-label vs generic differ **only** by a build-time config (`site.hardcoded` + branding from build-config) — same screens, same logic; the white-label build hides the "Site URL" login field and skips site discovery.
+
+---
+
 ## 1. Feature coverage scorecard (100% of app-applicable endpoints)
 
 | # | Domain | Spec file | Endpoints mapped |
@@ -78,4 +94,4 @@ Contracts above are frozen first; dependents build against them. Each gate must 
 ---
 
 ## 5. What "deliver first working app" means here
-Foundation + feed + post detail + vote/reply + profile + notifications, authenticating to `forums.local` via an Application Password, bundling clean, opened in the iOS simulator (Xcode). Everything else (spaces, pro social, admin, Laravel builder, native push) layers on the same locked contracts without touching what's already shipped.
+The **generic, site-agnostic** app: launch → enter *any* Jetonomy site URL (we test with `forums.local`, but it accepts any site) → log in with an Application Password → feed + post detail + vote/reply + profile + notifications. Bundles clean, opened in the iOS simulator (Xcode). It is the multi-tenant public app from day one — `forums.local` is just the test community, not a baked-in target. Everything else (spaces, pro social, admin, Laravel white-label builder, native push) layers on the same locked contracts without touching what's already shipped.
