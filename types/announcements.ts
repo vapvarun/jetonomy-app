@@ -1,14 +1,18 @@
 // types/announcements.ts — site-announcement shapes (member read + admin CRUD).
 
-/** A super-sticky cross-space site announcement (a pinned post). */
+/**
+ * A super-sticky cross-space site announcement (a pinned post). Keys reflect the
+ * real payloads: member read `GET jetonomy/v1/announcements/active` returns
+ * `{id,title,space_id,url,created_at}`; admin `GET jetonomy-pro/v1/site-announcements`
+ * returns `{id,title,space_id,status,created_at}` (no url).
+ */
 export interface SiteAnnouncement {
   id: number;
   title: string;
-  excerpt: string;
-  space_slug: string | null;
-  url: string | null;
-  pinned_at: string | null;
-  expires_at: string | null;
+  space_id: number | null;
+  url?: string | null;
+  status?: string;
+  created_at: string;
 }
 
 /** Body for POST /site-announcements/{id} (pin a post). */

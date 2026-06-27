@@ -66,7 +66,8 @@ export interface AnalyticsRange {
 
 /** GET /analytics/export request. */
 export interface ExportRequest extends AnalyticsRange {
-  format?: 'csv' | 'json';
+  /** Server `/analytics/export` supports csv only. */
+  format?: 'csv';
 }
 
 /** GET /analytics/diff-report (admin diagnostic). */

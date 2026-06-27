@@ -91,9 +91,11 @@ export async function moderationStats(
  */
 export async function exportData(
   req: ExportRequest = {}
-): Promise<{ body: string; format: 'csv' | 'json' }> {
+): Promise<{ body: string; format: 'csv' }> {
   try {
-    const format = req.format ?? 'json';
+    // Server `/analytics/export` enum is csv-only; the body is just handed to a
+    // Share sheet (never parsed), so CSV is the right shareable format.
+    const format = 'csv' as const;
     const res = await client.get('/analytics/export', {
       params: { ...req, format },
       responseType: 'text',

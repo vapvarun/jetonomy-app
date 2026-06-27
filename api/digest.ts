@@ -18,7 +18,7 @@ export type { DigestPreferences } from '@/types/digest';
  * Gate flag — the digest endpoint is part of the Pro Email_Digest extension and
  * is absent on older sites. Settings hides the digest UI while this is false.
  */
-export const DIGEST_ENDPOINT_AVAILABLE = false;
+export const DIGEST_ENDPOINT_AVAILABLE = true;
 
 /** GET /users/me/digest-preferences. */
 export async function getDigestPreferences(): Promise<DigestPreferences> {

@@ -54,7 +54,7 @@ export default function AnalyticsScreen() {
   const doExport = async () => {
     try {
       setExporting(true);
-      const { body, format } = await exportData({ format: 'json' });
+      const { body, format } = await exportData();
       await Share.share({ message: body, title: `analytics.${format}` });
     } catch {
       // share cancelled / export failed — silent

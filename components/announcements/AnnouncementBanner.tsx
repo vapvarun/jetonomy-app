@@ -81,14 +81,6 @@ export default function AnnouncementBanner() {
         >
           {a.title || 'Announcement'}
         </Text>
-        {a.excerpt ? (
-          <Text
-            numberOfLines={2}
-            style={{ color: colors.textMuted, fontSize: typography.size.xs }}
-          >
-            {a.excerpt}
-          </Text>
-        ) : null}
       </View>
       <Pressable
         accessibilityRole="button"

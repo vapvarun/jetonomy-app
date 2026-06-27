@@ -166,9 +166,9 @@ export default function AnnouncementsAdminScreen() {
                 <Text numberOfLines={1} style={{ color: colors.text, fontWeight: typography.weight.semibold as '600' }}>
                   {a.title || `Post #${a.id}`}
                 </Text>
-                {a.pinned_at ? (
+                {a.created_at ? (
                   <Text style={{ color: colors.textMuted, fontSize: typography.size.xs }}>
-                    pinned {relativeTime(a.pinned_at)}
+                    pinned {relativeTime(a.created_at)}
                   </Text>
                 ) : null}
               </View>

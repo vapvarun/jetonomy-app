@@ -1,11 +1,12 @@
 // api/announcements.ts — site announcements: member read + admin pin/unpin.
 //
-// ⚠ Route perm is `permission_manage`. Whether ordinary members may read is
-// unresolved (06 spec #39). listActive() therefore degrades gracefully: on
-// 403/404 it resolves to [] so the member banner simply renders nothing rather
-// than throwing. The admin CRUD fns surface errors normally (admin screens).
+// Two distinct routes (different namespaces — verified against the live API):
+//   member read : GET  jetonomy/v1/announcements/active        -> { data: [...], meta }
+//   admin CRUD  : GET/POST/DELETE jetonomy-pro/v1/site-announcements[/{id}] -> { pins: [...] }
+// listActive() degrades gracefully (-> []) so the banner just hides on any error;
+// the admin fns throw so the management screen can render Error/Forbidden states.
 
-import { client, toApiError } from '@/api/client';
+import { client, proClient, toApiError } from '@/api/client';
 import type { ListEnvelope } from '@/types/api';
 import type {
   PinAnnouncementBody,
@@ -13,22 +14,29 @@ import type {
 } from '@/types/announcements';
 
 function unwrap(
-  body: SiteAnnouncement[] | ListEnvelope<SiteAnnouncement> | null | undefined
+  body:
+    | SiteAnnouncement[]
+    | ListEnvelope<SiteAnnouncement>
+    | { pins?: SiteAnnouncement[] }
+    | null
+    | undefined
 ): SiteAnnouncement[] {
   if (!body) return [];
-  return Array.isArray(body) ? body : body.data ?? [];
+  if (Array.isArray(body)) return body;
+  if ('pins' in body && Array.isArray(body.pins)) return body.pins;
+  if ('data' in body && Array.isArray(body.data)) return body.data;
+  return [];
 }
 
 /**
- * GET /site-announcements (member display path). NEVER throws — on 403 (member
- * read not allowed), 404 (route absent on older sites), or any error → []. The
- * banner hides itself when the list is empty.
+ * GET jetonomy/v1/announcements/active (member display path). NEVER throws — on
+ * 404 (older site) / any error → []. The banner hides itself when empty.
  */
 export async function listActive(): Promise<SiteAnnouncement[]> {
   try {
-    const res = await client.get<
-      SiteAnnouncement[] | ListEnvelope<SiteAnnouncement>
-    >('/site-announcements');
+    const res = await client.get<ListEnvelope<SiteAnnouncement>>(
+      '/announcements/active'
+    );
     return unwrap(res.data);
   } catch {
     return [];
@@ -36,27 +44,27 @@ export async function listActive(): Promise<SiteAnnouncement[]> {
 }
 
 /**
- * GET /site-announcements (admin management path). THROWS on error so the admin
- * screen can render ForbiddenState / ErrorState.
+ * GET jetonomy-pro/v1/site-announcements (admin management path). THROWS on
+ * error so the admin screen can render ForbiddenState / ErrorState.
  */
 export async function list(): Promise<SiteAnnouncement[]> {
   try {
-    const res = await client.get<
-      SiteAnnouncement[] | ListEnvelope<SiteAnnouncement>
-    >('/site-announcements');
+    const res = await proClient.get<{ pins?: SiteAnnouncement[] }>(
+      '/site-announcements'
+    );
     return unwrap(res.data);
   } catch (e) {
     throw toApiError(e);
   }
 }
 
-/** POST /site-announcements/{id} — pin a post as a site announcement. */
+/** POST jetonomy-pro/v1/site-announcements/{id} — pin a post as a site announcement. */
 export async function pin(
   postId: number,
   body: PinAnnouncementBody = {}
 ): Promise<SiteAnnouncement> {
   try {
-    const res = await client.post<SiteAnnouncement>(
+    const res = await proClient.post<SiteAnnouncement>(
       `/site-announcements/${postId}`,
       body
     );
@@ -66,10 +74,10 @@ export async function pin(
   }
 }
 
-/** DELETE /site-announcements/{id} — unpin. */
+/** DELETE jetonomy-pro/v1/site-announcements/{id} — unpin. */
 export async function unpin(postId: number): Promise<{ deleted: true }> {
   try {
-    const res = await client.delete<{ deleted: true }>(
+    const res = await proClient.delete<{ deleted: true }>(
       `/site-announcements/${postId}`
     );
     return res.data;

@@ -26,6 +26,10 @@ export interface ApiError {
 // on login / logout / site switch while keeping import references stable.
 export let client: AxiosInstance = axios.create();
 export let coreClient: AxiosInstance = axios.create();
+// A handful of Pro extensions register their ADMIN routes under the
+// `jetonomy-pro/v1` namespace (e.g. site-announcements CRUD) rather than the
+// shared `jetonomy/v1`. Member-facing Pro routes stay on `client`.
+export let proClient: AxiosInstance = axios.create();
 
 let currentSiteUrl: string | null = null;
 let currentAuthHeader: string | null = null;
@@ -69,6 +73,7 @@ export function configureClients(opts: {
   currentAuthHeader = buildAuthHeader(opts.user, opts.appPassword);
   client = makeInstance(`${siteUrl}/wp-json/jetonomy/v1`, currentAuthHeader);
   coreClient = makeInstance(`${siteUrl}/wp-json`, currentAuthHeader);
+  proClient = makeInstance(`${siteUrl}/wp-json/jetonomy-pro/v1`, currentAuthHeader);
 }
 
 /** Drop the Authorization header (logout) while keeping baseURLs intact. */
