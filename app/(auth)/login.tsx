@@ -14,6 +14,7 @@
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -172,6 +173,14 @@ export default function LoginScreen() {
         }}
         keyboardShouldPersistTaps="handled"
       >
+        {site?.branding?.logoUrl ? (
+          <Image
+            source={{ uri: site.branding.logoUrl }}
+            resizeMode="contain"
+            accessibilityLabel={site?.branding?.appName ?? site?.siteName ?? 'Community logo'}
+            style={{ width: 160, height: 56, marginBottom: spacing[4] }}
+          />
+        ) : null}
         <Text
           style={{
             color: colors.text,
@@ -180,7 +189,7 @@ export default function LoginScreen() {
             marginBottom: spacing[2],
           }}
         >
-          {site?.siteName ?? 'Jetonomy'}
+          {site?.branding?.appName ?? site?.siteName ?? 'Jetonomy'}
         </Text>
         <Text
           style={{

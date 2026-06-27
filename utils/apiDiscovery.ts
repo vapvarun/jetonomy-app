@@ -8,12 +8,21 @@ import type { SiteIndex } from '@/types/config';
 
 const JETONOMY_NAMESPACE = 'jetonomy/v1';
 
+/** Pre-login branding pulled from the public /app/config (1.6.0+). */
+export interface SiteBranding {
+  appName: string | null;
+  logoUrl: string | null;
+  accentColor: string | null;
+}
+
 export interface SiteValidation {
   ok: boolean;
   hasJetonomy: boolean;
   siteName: string | null;
   siteIcon: string | null;
   siteUrl: string; // normalized
+  /** Logo + name + accent from /app/config, for pre-sign-in theming. */
+  branding?: SiteBranding;
   /** Machine-readable failure reason for the UI to branch on. */
   reason?:
     | 'insecure'
@@ -22,6 +31,31 @@ export interface SiteValidation {
     | 'auth_blocked'
     | 'bad_url';
   message?: string;
+}
+
+/**
+ * Fetch the public /app/config for pre-login branding. Never throws — a 1.4.x
+ * site (no route) just yields all-null and the login screen falls back to the
+ * core site name + default accent.
+ */
+async function fetchBranding(
+  url: string,
+  http: import('axios').AxiosInstance
+): Promise<SiteBranding> {
+  try {
+    const res = await http.get<{
+      app_name?: string | null;
+      logo_url?: string | null;
+      accent_color?: string | null;
+    }>(`${url}/wp-json/${JETONOMY_NAMESPACE}/app/config`);
+    return {
+      appName: res.data?.app_name ?? null,
+      logoUrl: res.data?.logo_url || null,
+      accentColor: res.data?.accent_color || null,
+    };
+  } catch {
+    return { appName: null, logoUrl: null, accentColor: null };
+  }
 }
 
 /** A host that is allowed to use http:// (Local-by-Flywheel dev, loopback). */
@@ -104,6 +138,7 @@ export async function verifyJetonomySite(input: string): Promise<SiteValidation>
         siteName: data?.name ?? null,
         siteIcon: data?.site_icon_url ?? null,
         siteUrl: url,
+        branding: await fetchBranding(url, http),
       };
     }
   } catch {
@@ -122,6 +157,7 @@ export async function verifyJetonomySite(input: string): Promise<SiteValidation>
         siteName: null,
         siteIcon: null,
         siteUrl: url,
+        branding: await fetchBranding(url, http),
       };
     }
     return {
