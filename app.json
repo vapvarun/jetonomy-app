@@ -46,9 +46,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "REPLACE_VIA_eas_init"
+        "projectId": "6722521e-7810-4381-8d76-9dd637e76c9d"
       },
-      "ownerNote": "Set expo.owner to your Expo account or org slug before EAS builds. Running `eas init` populates expo.owner + extra.eas.projectId automatically (see EAS-SETUP.md). The push token code treats the REPLACE_VIA_eas_init placeholder as 'no projectId'."
+      "ownerNote": "projectId linked. Set expo.owner to your Expo account/org slug before EAS builds (eas login then eas init confirms it). The push token code reads extra.eas.projectId."
     }
   }
 }
