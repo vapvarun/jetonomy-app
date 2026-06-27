@@ -1,7 +1,8 @@
 {
   "expo": {
     "name": "Jetonomy",
-    "slug": "jetonomy-app",
+    "slug": "jetonomy",
+    "owner": "wbcomdesigns",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,7 +16,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jetonomy.app"
+      "bundleIdentifier": "com.jetonomy.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.jetonomy.app",
