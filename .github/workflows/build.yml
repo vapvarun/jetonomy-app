@@ -1,0 +1,122 @@
+name: Build App
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: 'Server build id'
+        required: true
+      platform:
+        description: 'android | ios'
+        required: true
+      config_url:
+        description: 'build-config URL'
+        required: true
+      distribution:
+        description: 'internal | store'
+        required: false
+        default: 'internal'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Inputs are dispatched by our own authenticated Laravel server, but we
+    # still route every one through env vars (never inline in run:) and build
+    # JSON with jq --arg to avoid any shell/JSON injection. Defense in depth.
+    env:
+      BUILD_ID: ${{ inputs.build_id }}
+      PLATFORM: ${{ inputs.platform }}
+      CONFIG_URL: ${{ inputs.config_url }}
+      DISTRIBUTION: ${{ inputs.distribution }}
+      RUN_ID: ${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Validate inputs
+        run: |
+          case "$PLATFORM" in
+            android|ios) ;;
+            *) echo "Invalid platform: $PLATFORM" >&2; exit 1 ;;
+          esac
+          case "$DISTRIBUTION" in
+            internal|store) ;;
+            *) echo "Invalid distribution: $DISTRIBUTION" >&2; exit 1 ;;
+          esac
+          [[ "$BUILD_ID" =~ ^[0-9]+$ ]] || { echo "Invalid build_id: $BUILD_ID" >&2; exit 1; }
+
+      - name: Fetch customer branding config
+        env:
+          BUILD_TOKEN: ${{ secrets.BUILD_TOKEN }}
+        run: |
+          curl -sS -H "X-Build-Token: ${BUILD_TOKEN}" \
+               "${CONFIG_URL}" -o customer-config.json
+          test -s customer-config.json   # fail fast if empty
+
+      - name: Inject branding
+        run: node scripts/inject-branding.js customer-config.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: EAS Build
+        id: eas
+        run: |
+          eas build --platform "$PLATFORM" --profile production \
+            --non-interactive --json --no-wait > eas-result.json
+          echo "artifact=$(jq -r '.[0].artifacts.buildUrl // empty' eas-result.json)" >> "$GITHUB_OUTPUT"
+
+      # --- §12.3 model-B (white-label store) submit — PLAN-ONLY ---
+      # Inert for the default Model A container path (distribution=internal).
+      # Only the agency/lifetime/app-only "store" path reaches it, and that
+      # requires the customer's Apple/Google credentials configured in EAS.
+      # Left disabled until §12.2 credentials wiring lands.
+      - name: Submit to store (model B only)
+        if: ${{ inputs.distribution == 'store' }}
+        run: |
+          echo "Model-B store submission is planned but not yet enabled."
+          echo "Connect Apple/Google store credentials (§12.2) before enabling:"
+          echo "  eas submit --platform \"$PLATFORM\" --profile production --non-interactive"
+
+      - name: Notify server (success)
+        if: success()
+        env:
+          SERVER_URL: ${{ secrets.SERVER_URL }}
+          WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
+          ARTIFACT: ${{ steps.eas.outputs.artifact }}
+        run: |
+          payload="$(jq -nc \
+            --arg build_id "$BUILD_ID" \
+            --arg status "ready" \
+            --arg github_run_id "$RUN_ID" \
+            --arg download_url "$ARTIFACT" \
+            '{build_id:$build_id,status:$status,github_run_id:$github_run_id,download_url:$download_url}')"
+          curl -sS -X POST "${SERVER_URL}/webhooks/github/build-complete" \
+            -H "Content-Type: application/json" \
+            -H "X-Webhook-Token: ${WEBHOOK_TOKEN}" \
+            -d "$payload"
+
+      - name: Notify server (failure)
+        if: failure()
+        env:
+          SERVER_URL: ${{ secrets.SERVER_URL }}
+          WEBHOOK_TOKEN: ${{ secrets.WEBHOOK_TOKEN }}
+        run: |
+          payload="$(jq -nc \
+            --arg build_id "$BUILD_ID" \
+            --arg status "failed" \
+            --arg github_run_id "$RUN_ID" \
+            --arg error_log "EAS build failed - see Actions run $RUN_ID" \
+            '{build_id:$build_id,status:$status,github_run_id:$github_run_id,error_log:$error_log}')"
+          curl -sS -X POST "${SERVER_URL}/webhooks/github/build-complete" \
+            -H "Content-Type: application/json" \
+            -H "X-Webhook-Token: ${WEBHOOK_TOKEN}" \
+            -d "$payload"
