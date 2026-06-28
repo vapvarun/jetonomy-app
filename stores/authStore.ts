@@ -37,14 +37,23 @@ export type AuthStatus = 'unknown' | 'unauthed' | 'authed';
 
 interface AuthState {
   sites: Record<string, Session>;
+  /** All saved community URLs (for the switcher), from the secure index. */
+  savedSites: string[];
   activeSiteUrl: string | null;
   status: AuthStatus;
+  /** True while the login screen is open to ADD a community (gate exception). */
+  isAddingSite: boolean;
 
   // lifecycle
   hydrate: () => Promise<void>;
   signIn: (siteUrl: string, user: string, appPassword: string, me?: Me) => Promise<void>;
   signOut: () => Promise<void>;
   switchSite: (siteUrl: string) => Promise<void>;
+  /** Remove one saved community; switches to another (or signs out) if it was active. */
+  removeSite: (siteUrl: string) => Promise<void>;
+  /** Open the login screen to add another community without leaving the app. */
+  startAddSite: () => void;
+  cancelAddSite: () => void;
 
   // setters (used by api hooks after refetch)
   setUser: (user: Me) => void;
@@ -64,12 +73,15 @@ function emptySession(siteUrl: string): Session {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   sites: {},
+  savedSites: [],
   activeSiteUrl: null,
   status: 'unknown',
+  isAddingSite: false,
 
   hydrate: async () => {
     try {
       const index = await loadSitesIndex();
+      set({ savedSites: index.siteUrls });
       const active = index.activeSiteUrl;
       if (!active) {
         // White-label build: no saved creds yet. Point the clients at the baked
@@ -133,8 +145,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     session.siteIndex = siteIndex;
     set({
       sites: { ...get().sites, [siteUrl]: session },
+      savedSites: [...new Set([...get().savedSites, siteUrl])],
       activeSiteUrl: siteUrl,
       status: 'authed',
+      isAddingSite: false,
     });
   },
 
@@ -148,11 +162,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const nextActive = index.activeSiteUrl;
     if (nextActive) {
       // Another saved site exists — switch to it.
+      set({ sites, savedSites: index.siteUrls });
       await get().switchSite(nextActive);
       return;
     }
-    set({ sites, activeSiteUrl: null, status: 'unauthed' });
+    set({ sites, savedSites: index.siteUrls, activeSiteUrl: null, status: 'unauthed' });
   },
+
+  removeSite: async (siteUrl) => {
+    const wasActive = get().activeSiteUrl === siteUrl;
+    await clearCreds(siteUrl); // deletes creds + drops it from the index
+    const index = await loadSitesIndex();
+    const sites = { ...get().sites };
+    delete sites[siteUrl];
+    set({ sites, savedSites: index.siteUrls });
+    if (wasActive) {
+      if (index.activeSiteUrl) {
+        await get().switchSite(index.activeSiteUrl);
+      } else {
+        clearClientAuth();
+        set({ activeSiteUrl: null, status: 'unauthed' });
+      }
+    }
+  },
+
+  startAddSite: () => set({ isAddingSite: true }),
+  cancelAddSite: () => set({ isAddingSite: false }),
 
   switchSite: async (siteUrl) => {
     const loaded = await loadCreds(siteUrl);

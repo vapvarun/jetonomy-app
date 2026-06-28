@@ -7,9 +7,9 @@ import { ActivityIndicator, View } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 
-import { queryClient } from '@/api/queryClient';
+import { queryClient, queryPersister, OFFLINE_MAX_AGE } from '@/api/queryClient';
 import { ThemeProvider, useTheme } from '@/theme/ThemeContext';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -33,6 +33,7 @@ function Splash() {
 
 function RootNavigator() {
   const status = useAuthStore((s) => s.status);
+  const isAddingSite = useAuthStore((s) => s.isAddingSite);
   const segments = useSegments();
   const router = useRouter();
   const { scheme } = useTheme();
@@ -46,10 +47,12 @@ function RootNavigator() {
     const inAuthGroup = segments[0] === '(auth)';
     if (status === 'unauthed' && !inAuthGroup) {
       router.replace('/login');
-    } else if (status === 'authed' && inAuthGroup) {
+    } else if (status === 'authed' && inAuthGroup && !isAddingSite) {
+      // Authed users leave the auth group — unless they deliberately opened
+      // login to ADD another community (the switcher's "Add" flow).
       router.replace('/');
     }
-  }, [status, segments, router]);
+  }, [status, segments, router, isAddingSite]);
 
   if (status === 'unknown') return <Splash />;
 
@@ -75,11 +78,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: queryPersister, maxAge: OFFLINE_MAX_AGE }}
+      >
         <ThemeProvider>
           <RootNavigator />
         </ThemeProvider>
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </SafeAreaProvider>
   );
 }

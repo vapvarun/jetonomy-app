@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LogOut, Pencil, Settings, Trophy } from 'lucide-react-native';
+import { Boxes, LogOut, Pencil, Settings, Trophy } from 'lucide-react-native';
+
+import { SITE_URL_HARDCODED } from '@/theme/branding';
 
 import PostCard, { PostCardSkeleton } from '@/components/PostCard';
 import UserHeader from '@/components/UserHeader';
@@ -58,6 +60,9 @@ export default function ProfileScreen() {
     <View style={{ gap: spacing[4], marginBottom: spacing[2] }}>
       {/* Top action bar */}
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: spacing[4] }}>
+        {!SITE_URL_HARDCODED ? (
+          <IconLink label="Communities" onPress={() => router.push('/communities')} icon={<Boxes color={colors.text} size={20} />} />
+        ) : null}
         <IconLink label="Leaderboard" onPress={() => router.push('/leaderboard')} icon={<Trophy color={colors.text} size={20} />} />
         <IconLink label="Edit profile" onPress={() => router.push('/edit-profile')} icon={<Pencil color={colors.text} size={20} />} />
         <IconLink label="Settings" onPress={() => router.push('/settings')} icon={<Settings color={colors.text} size={20} />} />
