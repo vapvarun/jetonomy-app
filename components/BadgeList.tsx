@@ -71,7 +71,7 @@ export default function BadgeList({ badges, isLoading }: BadgeListProps) {
             return (
               <View
                 key={b.id}
-                accessibilityLabel={`${b.name}${b.earned_at ? `, earned ${b.earned_at}` : ''}`}
+                accessibilityLabel={`${b.name}${b.earned_count > 1 ? `, earned ${b.earned_count} times` : ''}${b.earned_at ? `, last earned ${b.earned_at}` : ''}`}
                 style={{ width: 72, alignItems: 'center', gap: 4 }}
               >
                 <View
@@ -87,6 +87,26 @@ export default function BadgeList({ badges, isLoading }: BadgeListProps) {
                   }}
                 >
                   <Icon color={tint} size={22} />
+                  {b.earned_count > 1 ? (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -4,
+                        minWidth: 18,
+                        height: 18,
+                        paddingHorizontal: 4,
+                        borderRadius: radius.full,
+                        backgroundColor: tint,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>
+                        ×{b.earned_count}
+                      </Text>
+                    </View>
+                  ) : null}
                 </View>
                 <Text
                   style={{ color: colors.textMuted, fontSize: typography.size.xs, textAlign: 'center' }}
