@@ -107,7 +107,7 @@ export default function HomeScreen() {
       {isLoading ? (
         <View style={{ padding: spacing[4], gap: spacing[3] }}>
           {[0, 1, 2, 3].map((i) => (
-            <PostCardSkeleton key={i} />
+            <PostCardSkeleton key={`sk-${i}`} />
           ))}
         </View>
       ) : isError ? (

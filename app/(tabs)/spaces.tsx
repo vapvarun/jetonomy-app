@@ -159,7 +159,7 @@ export default function SpacesScreen() {
       {isLoading ? (
         <View style={{ padding: spacing[4], gap: spacing[3] }}>
           {[0, 1, 2, 3, 4].map((i) => (
-            <SpaceCardSkeleton key={i} />
+            <SpaceCardSkeleton key={`sk-${i}`} />
           ))}
         </View>
       ) : isError ? (

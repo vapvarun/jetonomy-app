@@ -77,7 +77,7 @@ export default function SpaceFeedScreen() {
       {spaceQ.isLoading ? (
         <View style={{ padding: spacing[4], gap: spacing[3] }}>
           {[0, 1, 2].map((i) => (
-            <PostCardSkeleton key={i} />
+            <PostCardSkeleton key={`sk-${i}`} />
           ))}
         </View>
       ) : gateError ? (
@@ -195,7 +195,7 @@ export default function SpaceFeedScreen() {
             postsQ.isLoading ? (
               <View style={{ gap: spacing[3] }}>
                 {[0, 1].map((i) => (
-                  <PostCardSkeleton key={i} />
+                  <PostCardSkeleton key={`sk-${i}`} />
                 ))}
               </View>
             ) : (

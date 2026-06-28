@@ -111,7 +111,7 @@ export default function MessagesScreen() {
       {isLoading ? (
         <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[2] }}>
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <ConversationItemSkeleton key={i} />
+            <ConversationItemSkeleton key={`sk-${i}`} />
           ))}
         </View>
       ) : isError ? (

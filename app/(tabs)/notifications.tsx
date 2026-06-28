@@ -186,7 +186,7 @@ export default function NotificationsScreen() {
         <View style={{ padding: spacing[4], gap: spacing[3] }}>
           {[0, 1, 2, 3, 4].map((i) => (
             <View
-              key={i}
+              key={`sk-${i}`}
               style={{ height: 64, borderRadius: radius.md, backgroundColor: colors.bgSubtle }}
             />
           ))}

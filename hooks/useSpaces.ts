@@ -32,6 +32,7 @@ import {
 } from '@/api/spaces';
 import { listCategories } from '@/api/categories';
 import { useCurrentUser } from '@/stores/authStore';
+import { dedupeBy } from '@/utils/dedupe';
 import type { ListEnvelope } from '@/types/api';
 import type { CategoryTreeNode } from '@/types/category';
 import type {
@@ -64,7 +65,12 @@ export function useSpaceList(params: Omit<ListSpacesQuery, 'after' | 'offset'> =
     getNextPageParam: (last) =>
       last.meta.has_more ? last.meta.cursor_next ?? undefined : undefined,
   });
-  const spaces: Space[] = query.data?.pages.flatMap((p) => p.data) ?? [];
+  // Dedupe by id — a space created/reordered between page fetches can land on two
+  // pages (10k+ spaces makes this likely), which would collide FlatList keys.
+  const spaces: Space[] = dedupeBy(
+    query.data?.pages.flatMap((p) => p.data) ?? [],
+    (s) => s.id
+  );
   return { ...query, spaces };
 }
 
@@ -89,7 +95,12 @@ export function useSpaceMembers(id: number | null) {
     getNextPageParam: (last) =>
       last.meta.has_more ? last.meta.cursor_next ?? undefined : undefined,
   });
-  const members: SpaceMember[] = query.data?.pages.flatMap((p) => p.data) ?? [];
+  // Dedupe by user_id — the member-list key. Joins/leaves between page fetches
+  // can otherwise surface the same member on two pages.
+  const members: SpaceMember[] = dedupeBy(
+    query.data?.pages.flatMap((p) => p.data) ?? [],
+    (m) => m.user_id
+  );
   return { ...query, members };
 }
 

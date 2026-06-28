@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 
 import { listBookmarks, toggleBookmark } from '@/api/bookmarks';
+import { dedupeBy } from '@/utils/dedupe';
 import type { ListEnvelope } from '@/types/api';
 import type { BookmarkItem, BookmarkToggleResult } from '@/types/bookmark';
 import type { Post } from '@/types/post';
@@ -23,7 +24,12 @@ export function useBookmarks() {
     getNextPageParam: (last) =>
       last.meta.has_more ? last.meta.cursor_next ?? undefined : undefined,
   });
-  const bookmarks: BookmarkItem[] = query.data?.pages.flatMap((p) => p.data) ?? [];
+  // Dedupe by id — a bookmark added/removed between page fetches can otherwise
+  // repeat a row across a cursor boundary and collide FlatList keys.
+  const bookmarks: BookmarkItem[] = dedupeBy(
+    query.data?.pages.flatMap((p) => p.data) ?? [],
+    (b) => b.id
+  );
   return { ...query, bookmarks };
 }
 

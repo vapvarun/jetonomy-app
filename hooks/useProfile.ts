@@ -19,6 +19,7 @@ import {
 import { getUserFields, updateMyFields, listFields } from '@/api/fields';
 import { getUserBadges, listBadges } from '@/api/badges';
 import { useFeatures } from '@/stores/authStore';
+import { dedupeBy } from '@/utils/dedupe';
 import type { ListEnvelope } from '@/types/api';
 import type { Post } from '@/types/post';
 import type { Me, PublicUser } from '@/types/user';
@@ -67,7 +68,12 @@ export function useUserPosts(id: number | null) {
       return pages.reduce((n, p) => n + p.data.length, 0);
     },
   });
-  const posts: Post[] = query.data?.pages.flatMap((p) => p.data) ?? [];
+  // Offset paging overlaps when the member posts between fetches; dedupe by id so
+  // the profile/user FlatList (keyed by post.id) never collides keys.
+  const posts: Post[] = dedupeBy(
+    query.data?.pages.flatMap((p) => p.data) ?? [],
+    (p) => p.id
+  );
   return { ...query, posts };
 }
 

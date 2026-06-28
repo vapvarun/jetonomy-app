@@ -24,6 +24,7 @@ import {
   unreadCount,
 } from '@/api/conversations';
 import { useFeatures } from '@/stores/authStore';
+import { dedupeBy } from '@/utils/dedupe';
 import type { Conversation, ConversationFilter } from '@/types/conversation';
 import type { Message } from '@/types/message';
 
@@ -52,7 +53,12 @@ export function useConversationList(filter: ConversationFilter) {
     staleTime: 15_000,
     refetchInterval: 30_000,
   });
-  const conversations: Conversation[] = query.data?.pages.flat() ?? [];
+  // Offset paging + 30s poll can surface the same conversation on two pages when
+  // a new message reorders the list; dedupe by id to keep keys unique.
+  const conversations: Conversation[] = dedupeBy(
+    query.data?.pages.flat() ?? [],
+    (c) => c.id
+  );
   return { ...query, conversations };
 }
 
@@ -83,8 +89,13 @@ export function useConversationThread(id: number) {
     refetchInterval: 10_000,
   });
 
-  // Flattened newest-first (matches inverted FlatList ordering).
-  const list: Message[] = messages.data?.pages.flat() ?? [];
+  // Flattened newest-first (matches inverted FlatList ordering). The 10s poll can
+  // re-fetch a page whose newest message also arrived via a sibling page, so
+  // dedupe by id to keep the inverted FlatList keys unique.
+  const list: Message[] = dedupeBy(
+    messages.data?.pages.flat() ?? [],
+    (m) => m.id
+  );
 
   return { header, messages, list };
 }

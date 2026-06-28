@@ -35,6 +35,7 @@ import type {
 } from '@/types/moderation';
 import { useTheme } from '@/theme/ThemeContext';
 import { relativeTime } from '@/utils/date';
+import { dedupeBy } from '@/utils/dedupe';
 import {
   ManageHeader,
   LoadingState,
@@ -72,7 +73,12 @@ export default function QueueScreen() {
       last.meta.has_more ? pages.length + 1 : undefined,
   });
 
-  const items: QueueItem[] = q.data?.pages.flatMap((p) => p.data) ?? [];
+  // Page-number paging re-counts a row onto the next page when the queue shifts
+  // between fetches; dedupe by the composite row key so keys stay unique.
+  const items: QueueItem[] = dedupeBy(
+    q.data?.pages.flatMap((p) => p.data) ?? [],
+    keyOf
+  );
 
   const dropRows = (keys: string[]) => {
     const set = new Set(keys);

@@ -41,6 +41,12 @@ export default function BadgeList({ badges, isLoading }: BadgeListProps) {
 
   if (!enabled) return null;
 
+  // Dedupe by id — the badges endpoint can return the same badge twice (e.g.
+  // earned multiple times), which would collide React keys and duplicate cells.
+  const unique = badges
+    ? Array.from(new Map(badges.map((b) => [b.id, b])).values())
+    : [];
+
   return (
     <View style={{ gap: spacing[2] }}>
       <Text
@@ -55,11 +61,11 @@ export default function BadgeList({ badges, isLoading }: BadgeListProps) {
 
       {isLoading ? (
         <Text style={{ color: colors.textMuted, fontSize: typography.size.sm }}>Loading badges…</Text>
-      ) : !badges || badges.length === 0 ? (
+      ) : unique.length === 0 ? (
         <Text style={{ color: colors.textMuted, fontSize: typography.size.sm }}>No badges yet.</Text>
       ) : (
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] }}>
-          {badges.map((b) => {
+          {unique.map((b) => {
             const Icon = resolveIcon(b.icon);
             const tint = TIER_COLOR[b.tier] ?? colors.accent;
             return (

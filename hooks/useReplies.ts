@@ -20,6 +20,7 @@ import {
   type UpdateReplyBody,
 } from '@/api/replies';
 import { useCurrentUser } from '@/stores/authStore';
+import { dedupeBy } from '@/utils/dedupe';
 import type { ListEnvelope } from '@/types/api';
 import type { Post } from '@/types/post';
 import type { Reply, SplitResult } from '@/types/reply';
@@ -41,7 +42,13 @@ export function useReplies(postId: number, sort: ReplySort) {
     getNextPageParam: (last) =>
       last.meta.has_more ? last.meta.cursor_next ?? undefined : undefined,
   });
-  const replies: Reply[] = query.data?.pages.flatMap((p) => p.data) ?? [];
+  // A non-id sort (votes/recency) can shift a reply across a cursor boundary, and
+  // optimistic create briefly coexists with the server row; dedupe by id so the
+  // 200-400+ reply list never collides keys.
+  const replies: Reply[] = dedupeBy(
+    query.data?.pages.flatMap((p) => p.data) ?? [],
+    (r) => r.id
+  );
   return { ...query, replies };
 }
 

@@ -111,7 +111,7 @@ export default function LeaderboardScreen() {
       {isLoading ? (
         <View style={{ padding: spacing[4], gap: spacing[3] }}>
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <View key={i} style={{ height: 64, borderRadius: radius.md, backgroundColor: colors.bgSubtle }} />
+            <View key={`sk-${i}`} style={{ height: 64, borderRadius: radius.md, backgroundColor: colors.bgSubtle }} />
           ))}
         </View>
       ) : isError ? (

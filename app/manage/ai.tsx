@@ -14,6 +14,7 @@ import type { ListEnvelope } from '@/types/api';
 import type { AiUsageRow, AiUsageSummary } from '@/types/ai';
 import { useTheme } from '@/theme/ThemeContext';
 import { relativeTime } from '@/utils/date';
+import { dedupeBy } from '@/utils/dedupe';
 import {
   ManageHeader,
   LoadingState,
@@ -61,7 +62,12 @@ export default function AiUsageScreen() {
     );
   }
 
-  const items: AiUsageRow[] = rows.data?.pages.flatMap((p) => p.data) ?? [];
+  // Page-number paging re-counts a row onto the next page when usage grows
+  // between fetches; dedupe by id so FlatList keys stay unique.
+  const items: AiUsageRow[] = dedupeBy(
+    rows.data?.pages.flatMap((p) => p.data) ?? [],
+    (r) => r.id
+  );
   const s = summary.data;
 
   return (

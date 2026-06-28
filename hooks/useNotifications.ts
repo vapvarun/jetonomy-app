@@ -16,6 +16,7 @@ import {
   unreadCount,
 } from '@/api/notifications';
 import { toApiError } from '@/api/client';
+import { dedupeBy } from '@/utils/dedupe';
 import type { ListEnvelope } from '@/types/api';
 import type {
   BulkAction,
@@ -44,8 +45,12 @@ export function useNotifications(filter: NotificationFilter) {
       return loaded;
     },
   });
-  const items: NotificationItem[] =
-    query.data?.pages.flatMap((p) => p.data) ?? [];
+  // Offset paging overlaps when new notifications arrive between fetches; dedupe
+  // by id so the FlatList never sees a repeated key.
+  const items: NotificationItem[] = dedupeBy(
+    query.data?.pages.flatMap((p) => p.data) ?? [],
+    (n) => n.id
+  );
   return { ...query, items };
 }
 

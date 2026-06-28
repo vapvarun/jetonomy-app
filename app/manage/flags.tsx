@@ -22,6 +22,7 @@ import type { ListEnvelope } from '@/types/api';
 import type { Flag } from '@/types/moderation';
 import { useTheme } from '@/theme/ThemeContext';
 import { relativeTime } from '@/utils/date';
+import { dedupeBy } from '@/utils/dedupe';
 import {
   ManageHeader,
   LoadingState,
@@ -56,7 +57,12 @@ export default function FlagsScreen() {
       last.meta.has_more ? pages.length + 1 : undefined,
   });
 
-  const items: Flag[] = q.data?.pages.flatMap((p) => p.data) ?? [];
+  // Page-number paging re-counts a flag onto the next page when the list shifts
+  // between fetches; dedupe by id so FlatList keys stay unique.
+  const items: Flag[] = dedupeBy(
+    q.data?.pages.flatMap((p) => p.data) ?? [],
+    (f) => f.id
+  );
 
   const resolve = useMutation<void, ApiError, number>({
     mutationFn: async (id) => {
