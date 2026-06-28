@@ -53,6 +53,12 @@
         "projectId": "6722521e-7810-4381-8d76-9dd637e76c9d"
       },
       "ownerNote": "projectId linked. Set expo.owner to your Expo account/org slug before EAS builds (eas login then eas init confirms it). The push token code reads extra.eas.projectId."
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/6722521e-7810-4381-8d76-9dd637e76c9d"
     }
   }
 }
