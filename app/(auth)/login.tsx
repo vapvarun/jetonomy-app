@@ -28,6 +28,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { login } from '@/api/auth';
 import { toApiError } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
+import { DEFAULT_APP_CONFIG } from '@/api/config';
 import { useTheme } from '@/theme/ThemeContext';
 import { SITE_URL, SITE_URL_HARDCODED } from '@/theme/branding';
 import { verifyJetonomySite, type SiteValidation } from '@/utils/apiDiscovery';
@@ -53,6 +54,7 @@ export default function LoginScreen() {
   const { colors, spacing, radius, typography } = useTheme();
   const insets = useSafeAreaInsets();
   const signIn = useAuthStore((s) => s.signIn);
+  const setPendingBranding = useAuthStore((s) => s.setPendingBranding);
 
   const [phase, setPhase] = useState<Phase>(
     SITE_URL_HARDCODED ? 'credentials' : 'site'
@@ -75,6 +77,17 @@ export default function LoginScreen() {
         return;
       }
       setSite(result);
+      // Apply the discovered accent/name so the theme brands the login screen
+      // (button, links) before any session exists.
+      if (result.branding) {
+        // Build a COMPLETE config (stable object) — see authStore.pendingBranding.
+        setPendingBranding({
+          ...DEFAULT_APP_CONFIG,
+          accent_color: result.branding.accentColor ?? DEFAULT_APP_CONFIG.accent_color,
+          app_name: result.branding.appName,
+          logo_url: result.branding.logoUrl,
+        });
+      }
       setPhase('credentials');
     } catch (e) {
       setError(toApiError(e).message);

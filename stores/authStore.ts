@@ -43,6 +43,11 @@ interface AuthState {
   status: AuthStatus;
   /** True while the login screen is open to ADD a community (gate exception). */
   isAddingSite: boolean;
+  /** Branding discovered on the login screen (pre-auth) so the theme can apply
+   * the site's accent before any session exists. A COMPLETE config (stable
+   * reference) so the useAppConfig selector never returns a fresh object (which
+   * would loop Zustand). Cleared once signed in. */
+  pendingBranding: AppConfig | null;
 
   // lifecycle
   hydrate: () => Promise<void>;
@@ -59,6 +64,8 @@ interface AuthState {
   setUser: (user: Me) => void;
   setAppConfig: (config: AppConfig) => void;
   refreshActiveConfig: () => Promise<void>;
+  /** Set/clear the pre-auth discovered branding (login screen). Pass a complete config. */
+  setPendingBranding: (branding: AppConfig | null) => void;
 }
 
 function emptySession(siteUrl: string): Session {
@@ -77,6 +84,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   activeSiteUrl: null,
   status: 'unknown',
   isAddingSite: false,
+  pendingBranding: null,
 
   hydrate: async () => {
     try {
@@ -149,6 +157,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       activeSiteUrl: siteUrl,
       status: 'authed',
       isAddingSite: false,
+      pendingBranding: null,
     });
   },
 
@@ -235,6 +244,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const config = await getAppConfig();
     get().setAppConfig(config);
   },
+
+  setPendingBranding: (branding) => set({ pendingBranding: branding }),
 }));
 
 // ---- Selector helpers (the locked feature-gating contract) ----
@@ -259,11 +270,18 @@ export function useActiveSiteUrl(): string | null {
 }
 
 export function useAppConfig(): AppConfig {
-  return useAuthStore((s) =>
-    s.activeSiteUrl
-      ? s.sites[s.activeSiteUrl]?.appConfig ?? DEFAULT_APP_CONFIG
-      : DEFAULT_APP_CONFIG
-  );
+  return useAuthStore((s) => {
+    if (s.activeSiteUrl) {
+      return s.sites[s.activeSiteUrl]?.appConfig ?? DEFAULT_APP_CONFIG;
+    }
+    // Pre-auth (login screen): use branding discovered for the entered site so
+    // the theme accent matches before any session exists. Returned directly (a
+    // stable reference) — never spread here, or the selector loops.
+    if (s.pendingBranding) {
+      return s.pendingBranding;
+    }
+    return DEFAULT_APP_CONFIG;
+  });
 }
 
 /** LOCKED CONTRACT: Pro UI gates on these flags; free is always on. */
