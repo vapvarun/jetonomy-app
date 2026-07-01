@@ -11,6 +11,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 /** Keep cached data ~7 days so it can be restored offline across app restarts. */
 export const OFFLINE_MAX_AGE = 1000 * 60 * 60 * 24 * 7;
 
+/**
+ * Persisted-cache schema version. Bump whenever a query's cached shape or key
+ * changes so PersistQueryClientProvider discards incompatible on-disk caches
+ * instead of rehydrating a stale shape (which can crash consumers). Bumped to
+ * `2` alongside the notifications unread-count key split.
+ */
+export const CACHE_BUSTER = '2';
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

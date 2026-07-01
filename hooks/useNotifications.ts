@@ -46,18 +46,26 @@ export function useNotifications(filter: NotificationFilter) {
     },
   });
   // Offset paging overlaps when new notifications arrive between fetches; dedupe
-  // by id so the FlatList never sees a repeated key.
+  // by id so the FlatList never sees a repeated key. Guard `pages` (not just
+  // `data`) so a legacy/incompatible persisted shape degrades to an empty feed
+  // instead of throwing on `.flatMap`.
   const items: NotificationItem[] = dedupeBy(
-    query.data?.pages.flatMap((p) => p.data) ?? [],
+    query.data?.pages?.flatMap((p) => p.data) ?? [],
     (n) => n.id
   );
   return { ...query, items };
 }
 
-/** Unread count — polls every 30s + refetches on app foreground. Feeds the tab badge. */
+/**
+ * Unread count — polls every 30s + refetches on app foreground. Feeds the tab
+ * badge. Keyed `['notifications', 'unread-count']` (NOT `['notifications',
+ * 'unread']`) so this scalar query never collides with the infinite feed query
+ * for the `'unread'` filter, which would otherwise write a number where the feed
+ * expects `{ pages }` and crash on `.flatMap`.
+ */
 export function useUnreadCount() {
   return useQuery<number, Error>({
-    queryKey: ['notifications', 'unread'],
+    queryKey: ['notifications', 'unread-count'],
     queryFn: () => unreadCount().then((r) => r.count),
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,

@@ -9,7 +9,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 
-import { queryClient, queryPersister, OFFLINE_MAX_AGE } from '@/api/queryClient';
+import {
+  queryClient,
+  queryPersister,
+  OFFLINE_MAX_AGE,
+  CACHE_BUSTER,
+} from '@/api/queryClient';
 import { ThemeProvider, useTheme } from '@/theme/ThemeContext';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -80,7 +85,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister: queryPersister, maxAge: OFFLINE_MAX_AGE }}
+        persistOptions={{
+          persister: queryPersister,
+          maxAge: OFFLINE_MAX_AGE,
+          buster: CACHE_BUSTER,
+        }}
       >
         <ThemeProvider>
           <RootNavigator />
