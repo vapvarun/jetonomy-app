@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Pressable,
   Text,
   TextInput,
@@ -17,6 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react-native';
 
 import { recipientSuggestions } from '@/api/conversations';
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import type { RecipientSuggestion } from '@/types/conversation';
 
@@ -155,11 +155,7 @@ export default function RecipientPicker({ selected, onChange }: RecipientPickerP
                   borderTopColor: colors.border,
                 }}
               >
-                {item.avatar_url ? (
-                  <Image source={{ uri: item.avatar_url }} style={{ width: 32, height: 32, borderRadius: radius.full }} />
-                ) : (
-                  <View style={{ width: 32, height: 32, borderRadius: radius.full, backgroundColor: colors.bgSubtle }} />
-                )}
+                <Avatar uri={item.avatar_url} name={item.display_name} size={32} />
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: colors.text, fontSize: typography.size.sm, fontWeight: typography.weight.medium as '500' }}>
                     {item.display_name}

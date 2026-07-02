@@ -3,10 +3,11 @@
 // (join/leave) render centered with no bubble. Optimistic sends show a pending /
 // failed affordance (failed → tap to retry).
 
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Clock, AlertCircle } from 'lucide-react-native';
 
 import ContentBody from '@/components/ContentBody';
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import type { ThreadMessage } from '@/types/message';
 
@@ -50,11 +51,7 @@ export default function MessageBubble({ message, mine, isGroup = false, onRetry 
       }}
     >
       {!mine && isGroup ? (
-        message.sender_avatar ? (
-          <Image source={{ uri: message.sender_avatar }} style={{ width: 28, height: 28, borderRadius: radius.full }} />
-        ) : (
-          <View style={{ width: 28, height: 28, borderRadius: radius.full, backgroundColor: colors.bgSubtle }} />
-        )
+        <Avatar uri={message.sender_avatar} name={message.sender_name} size={28} />
       ) : null}
 
       <View style={{ maxWidth: '78%', gap: 2 }}>

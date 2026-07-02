@@ -1,10 +1,11 @@
 // components/LeaderboardRow.tsx — one ranked member row. #1–3 get a medal hue;
 // the current user is highlighted. Tapping routes to the public profile.
 
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import TrustLevelBadge from '@/components/TrustLevelBadge';
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import type { LeaderRow } from '@/types/leaderboard';
 
@@ -58,16 +59,7 @@ export default function LeaderboardRow({ row, isCurrentUser }: LeaderboardRowPro
         </Text>
       </View>
 
-      {row.avatar_url ? (
-        <Image
-          source={{ uri: row.avatar_url }}
-          style={{ width: 36, height: 36, borderRadius: radius.full }}
-        />
-      ) : (
-        <View
-          style={{ width: 36, height: 36, borderRadius: radius.full, backgroundColor: colors.bgSubtle }}
-        />
-      )}
+      <Avatar uri={row.avatar_url} name={row.display_name} size={36} />
 
       <View style={{ flex: 1, gap: 2 }}>
         <Text

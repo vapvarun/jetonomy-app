@@ -1,6 +1,6 @@
 // components/PostCard.tsx — feed/list row for a Post.
 
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   CheckCircle2,
@@ -10,6 +10,7 @@ import {
   Pin,
 } from 'lucide-react-native';
 
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import { stripHtml } from '@/utils/html';
 import type { IdeaStatus, Post } from '@/types/post';
@@ -47,21 +48,7 @@ export default function PostCard({ post }: PostCardProps) {
     >
       {/* Author + badges row */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
-        {post.author_avatar ? (
-          <Image
-            source={{ uri: post.author_avatar }}
-            style={{ width: 24, height: 24, borderRadius: radius.full }}
-          />
-        ) : (
-          <View
-            style={{
-              width: 24,
-              height: 24,
-              borderRadius: radius.full,
-              backgroundColor: colors.bgSubtle,
-            }}
-          />
-        )}
+        <Avatar uri={post.author_avatar} name={post.author_name} size={24} />
         <Text style={{ color: colors.textMuted, fontSize: typography.size.xs }} numberOfLines={1}>
           {post.author_name}
         </Text>

@@ -6,7 +6,7 @@
 // (swipe libs aren't in the dependency set, so dismiss is an explicit a11y button).
 
 import { memo } from 'react';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import type { Href } from 'expo-router';
 import {
   AtSign,
@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react-native';
 
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import type { NotificationItem as Notification } from '@/types/notification';
 
@@ -118,16 +119,7 @@ function NotificationRow({
       ) : null}
 
       <View style={{ position: 'relative' }}>
-        {item.actor_avatar ? (
-          <Image
-            source={{ uri: item.actor_avatar }}
-            style={{ width: 40, height: 40, borderRadius: radius.full }}
-          />
-        ) : (
-          <View
-            style={{ width: 40, height: 40, borderRadius: radius.full, backgroundColor: colors.bgSubtle }}
-          />
-        )}
+        <Avatar uri={item.actor_avatar} name={item.actor_name} size={40} />
         <View
           style={{
             position: 'absolute',

@@ -1,9 +1,10 @@
 // components/MemberRow.tsx — one member row with role badge + admin action menu.
 
 import { useState } from 'react';
-import { Image, Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { MoreHorizontal } from 'lucide-react-native';
 
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import type { SpaceMember, SpaceRole } from '@/types/space';
 
@@ -46,11 +47,7 @@ export default function MemberRow({
         paddingVertical: spacing[2],
       }}
     >
-      {member.avatar_url ? (
-        <Image source={{ uri: member.avatar_url }} style={{ width: 36, height: 36, borderRadius: radius.full }} />
-      ) : (
-        <View style={{ width: 36, height: 36, borderRadius: radius.full, backgroundColor: colors.bgSubtle }} />
-      )}
+      <Avatar uri={member.avatar_url} name={member.display_name} size={36} />
       <View style={{ flex: 1, gap: 2 }}>
         <Text numberOfLines={1} style={{ color: colors.text, fontSize: typography.size.sm, fontWeight: typography.weight.medium as '500' }}>
           {member.display_name}
