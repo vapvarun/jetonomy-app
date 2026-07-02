@@ -22,12 +22,14 @@ import BadgeList from '@/components/BadgeList';
 import CustomFieldList from '@/components/CustomFieldList';
 import { useMe, useUserPosts, useUserBadges, useUserFields } from '@/hooks/useProfile';
 import { useAuthStore, useCurrentUser } from '@/stores/authStore';
+import { usePushStore } from '@/stores/pushStore';
 import { useTheme } from '@/theme/ThemeContext';
 
 type Tab = 'posts' | 'bookmarks';
 
 export default function ProfileScreen() {
   const { colors, spacing, radius, typography } = useTheme();
+  const push = usePushStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const signOut = useAuthStore((s) => s.signOut);
@@ -66,6 +68,15 @@ export default function ProfileScreen() {
         <IconLink label="Leaderboard" onPress={() => router.push('/leaderboard')} icon={<Trophy color={colors.text} size={20} />} />
         <IconLink label="Edit profile" onPress={() => router.push('/edit-profile')} icon={<Pencil color={colors.text} size={20} />} />
         <IconLink label="Settings" onPress={() => router.push('/settings')} icon={<Settings color={colors.text} size={20} />} />
+      </View>
+
+      {/* TEMP push debug — remove after diagnosis */}
+      <View style={{ borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, padding: spacing[3], gap: 4, backgroundColor: colors.bgSubtle }}>
+        <Text style={{ color: colors.text, fontWeight: '700', fontSize: typography.size.sm }}>Push debug</Text>
+        <Text style={{ color: colors.textMuted, fontSize: typography.size.xs }}>
+          supported: {String(push.supported)} · permission: {push.permission} · registered: {String(push.registered)}
+        </Text>
+        <Text selectable style={{ color: colors.text, fontSize: typography.size.xs }}>token: {push.token ?? 'null'}</Text>
       </View>
 
       <UserHeader user={{ ...me, user_login: undefined }} linkReputation />
