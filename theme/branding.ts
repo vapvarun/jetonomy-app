@@ -1,18 +1,18 @@
-// theme/branding.ts — build-time branding constants.
+// theme/branding.ts — app-level DEFAULT branding, used only as a first-paint
+// fallback.
 //
-// This is the GENERIC (multi-tenant) default that ships in the public app:
-// nothing is hardcoded, the login screen asks for a Site URL and runs site
-// discovery. The Laravel white-label builder OVERWRITES this file via
-// scripts/inject-branding.js to bake a single site + brand into one customer
-// build (SITE_URL set, SITE_URL_HARDCODED = true, ACCENT branded).
+// The app is always multi-tenant: ALL live branding — accent color, logo, app
+// name, dark-mode default — comes from the connected community's plugin REST
+// API (Jetonomy 1.6.0+ `GET /app/config`, plus the core `/wp-json/` index).
+// These constants are the neutral Jetonomy defaults shown for the very first
+// paint (login screen, DEFAULT_APP_CONFIG) and on any /app/config 404 or parse
+// failure, so every module can always `import` a value.
 //
-// Foundation bootstrap (api/config.ts DEFAULT_APP_CONFIG, stores/authStore.ts
-// hydrate, app/(auth)/login.tsx) consumes these so it can always `import` them.
-// Keep this file's shape in sync with inject-branding.js → writeBranding().
+// Consumed by api/config.ts (DEFAULT_APP_CONFIG), stores/authStore.ts, and
+// app/(auth)/login.tsx.
 
-// NOTE: explicit widened types (string / boolean) are intentional — the injector
-// rewrites these values per build, so they must NOT narrow to literal types
-// (that would make TS treat the white-label branches as unreachable `never`).
+// NOTE: explicit widened types (string / boolean) keep the SITE_URL_HARDCODED
+// branches type-checkable rather than narrowing to a `never` literal.
 
 /** Seed accent the app derives its whole palette from until /app/config loads. */
 export const ACCENT: string = '#3B82F6';
@@ -20,13 +20,13 @@ export const ACCENT: string = '#3B82F6';
 /** Default to dark mode when the device pref is "system" and no /app/config yet. */
 export const DARK_MODE_DEFAULT: boolean = false;
 
-/** Baked site URL for white-label builds. Empty in the generic app. */
+/** Reserved single-site override. Always '' — the app is always multi-tenant. */
 export const SITE_URL: string = '';
 
 /**
- * When true (white-label build) the login screen HIDES the Site URL field,
- * skips site discovery, and seeds a single session for SITE_URL. When false
- * (generic public app) the multi-site / site-discovery flow runs.
+ * Always false: the app is always multi-tenant, so the login screen asks for a
+ * Site URL and runs site discovery. Reserved as the single gate for a possible
+ * future single-site build; nothing sets it true today.
  */
 export const SITE_URL_HARDCODED: boolean = false;
 

@@ -2,9 +2,9 @@
 
 import { client, coreClient } from '@/api/client';
 import type { AppConfig, AppFeatures, SiteIndex } from '@/types/config';
-// White-label seed: ACCENT/DARK_MODE_DEFAULT come from theme/branding.ts (baked
-// by scripts/inject-branding.js). Generic build = '#3B82F6' / false. This makes
-// the app branded BEFORE /app/config loads and on any 404 fallback.
+// App-level default branding: ACCENT/DARK_MODE_DEFAULT come from theme/branding.ts
+// ('#3B82F6' / false). This keeps the app branded BEFORE /app/config loads and on
+// any 404/parse fallback; live values come from Jetonomy 1.6.0 GET /app/config.
 import { ACCENT, DARK_MODE_DEFAULT } from '@/theme/branding';
 
 /** All Pro features OFF — the safe baseline for free sites / 404 / parse failure. */

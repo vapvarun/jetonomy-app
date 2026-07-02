@@ -7,9 +7,9 @@
 // which we validate via core wp/v2/users/me and store through authStore.signIn.
 // Manual app-password entry stays available as a fallback.
 //
-// White-label builds (branding.SITE_URL_HARDCODED) skip the Site URL phase +
-// discovery and go straight to Connect for the baked SITE_URL. Generic builds
-// __DEV__-prefill forums.local; production starts empty.
+// The app is always multi-tenant: __DEV__ prefills forums.local, production
+// starts empty. (SITE_URL_HARDCODED is a reserved single-site gate, always
+// false today.)
 
 import { useState } from 'react';
 import {
