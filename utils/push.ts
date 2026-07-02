@@ -115,7 +115,11 @@ export async function registerForPushNotifications(): Promise<string | null> {
 
     const device_id = await getDeviceId();
     // No-ops gracefully on a pre-1.6.0 server (api/push flips supported=false).
-    await registerDevice({ token, platform: currentPlatform(), device_id });
+    await registerDevice({
+      expo_push_token: token,
+      platform: currentPlatform(),
+      device_name: device_id,
+    });
     return token;
   } catch {
     return null;
@@ -127,7 +131,7 @@ export async function unregisterForPushNotifications(): Promise<void> {
   const token = usePushStore.getState().token;
   if (!token) return;
   try {
-    await unregisterDevice({ token });
+    await unregisterDevice({ expo_push_token: token });
   } catch {
     // best-effort
   }
