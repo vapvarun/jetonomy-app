@@ -6,16 +6,17 @@
 
 export type PushPlatform = 'ios' | 'android';
 
-/** Body for POST /push/register-device. */
+/** Body for POST /push/register-device. Field names match the 1.6.0 plugin
+ *  contract: rest_register_device reads expo_push_token / platform / device_name. */
 export interface RegisterDeviceBody {
-  token: string;
+  expo_push_token: string;
   platform: PushPlatform;
-  device_id: string;
+  device_name: string;
 }
 
-/** Body for DELETE /push/register-device. */
+/** Body for DELETE /push/register-device (plugin reads expo_push_token). */
 export interface UnregisterDeviceBody {
-  token: string;
+  expo_push_token: string;
 }
 
 /** Server acknowledgement of a stored Expo token. */
