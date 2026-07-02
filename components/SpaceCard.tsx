@@ -4,6 +4,7 @@ import { Image, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Lock, MessageSquare, Users } from 'lucide-react-native';
 
+import SpaceIcon from '@/components/SpaceIcon';
 import { useTheme } from '@/theme/ThemeContext';
 import { relativeTime } from '@/utils/date';
 import type { Space } from '@/types/space';
@@ -50,7 +51,7 @@ export default function SpaceCard({ space }: SpaceCardProps) {
               justifyContent: 'center',
             }}
           >
-            <Text style={{ fontSize: 20 }}>{space.icon || '#'}</Text>
+            <SpaceIcon icon={space.icon} size={22} color={colors.accent} />
           </View>
         )}
         <View style={{ flex: 1, gap: 2 }}>
