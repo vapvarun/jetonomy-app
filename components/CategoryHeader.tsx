@@ -3,6 +3,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { ChevronDown, ChevronRight } from 'lucide-react-native';
 
+import SpaceIcon from '@/components/SpaceIcon';
 import { useTheme } from '@/theme/ThemeContext';
 import type { Category } from '@/types/category';
 
@@ -33,7 +34,7 @@ export default function CategoryHeader({
       }}
     >
       <View style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, backgroundColor: accent }} />
-      {category.icon ? <Text style={{ fontSize: 16 }}>{category.icon}</Text> : null}
+      {category.icon ? <SpaceIcon icon={category.icon} size={16} color={accent} /> : null}
       <Text
         numberOfLines={1}
         style={{

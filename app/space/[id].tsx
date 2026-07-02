@@ -18,6 +18,7 @@ import { ArrowLeft, Lock, Plus, Users } from 'lucide-react-native';
 import PostCard, { PostCardSkeleton } from '@/components/PostCard';
 import JoinLeaveButton from '@/components/JoinLeaveButton';
 import SubscribeToggle from '@/components/SubscribeToggle';
+import SpaceIcon from '@/components/SpaceIcon';
 import { useSpace, useSpacePosts } from '@/hooks/useSpaces';
 import type { PostSort } from '@/api/posts';
 import { useTheme } from '@/theme/ThemeContext';
@@ -120,7 +121,7 @@ export default function SpaceFeedScreen() {
                     justifyContent: 'center',
                   }}
                 >
-                  <Text style={{ fontSize: 24 }}>{space.icon || '#'}</Text>
+                  <SpaceIcon icon={space.icon} size={26} color={colors.accent} />
                 </View>
                 <View style={{ flex: 1, gap: 2 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
