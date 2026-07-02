@@ -6,7 +6,6 @@ import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -52,6 +51,7 @@ import {
 import { useNewReplies, newReplyCount } from '@/hooks/useUpdates';
 import { listSpacesLite } from '@/api/posts';
 import { useCurrentUser } from '@/stores/authStore';
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import type { ReplySort } from '@/api/replies';
 import type { IdeaStatus, Post } from '@/types/post';
@@ -207,9 +207,7 @@ export default function PostDetailScreen() {
             </Text>
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
-            {post.author_avatar ? (
-              <Image source={{ uri: post.author_avatar }} style={{ width: 22, height: 22, borderRadius: radius.full }} />
-            ) : null}
+            <Avatar uri={post.author_avatar} name={post.author_name} size={22} />
             <Text style={{ color: colors.textMuted, fontSize: typography.size.sm }}>
               {post.author_name} · {post.time_ago} · {post.space_title}
             </Text>

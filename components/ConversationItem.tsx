@@ -2,10 +2,11 @@
 // other participant(s), title, last-message preview, relative time, unread dot,
 // muted/archived glyphs. Pure presentation; the screen owns navigation + data.
 
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { BellOff, Archive } from 'lucide-react-native';
 
 import { useCurrentUser } from '@/stores/authStore';
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import { relativeTime } from '@/utils/date';
 import type { Conversation, Participant } from '@/types/conversation';
@@ -41,11 +42,7 @@ export default function ConversationItem({ conversation, onPress }: Conversation
       }}
     >
       {/* Avatar (lead peer) */}
-      {lead?.avatar ? (
-        <Image source={{ uri: lead.avatar }} style={{ width: 44, height: 44, borderRadius: radius.full }} />
-      ) : (
-        <View style={{ width: 44, height: 44, borderRadius: radius.full, backgroundColor: colors.bgSubtle }} />
-      )}
+      <Avatar uri={lead?.avatar} name={lead?.display_name} size={44} />
 
       <View style={{ flex: 1, gap: 2 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>

@@ -1,13 +1,14 @@
 // components/ReplyItem.tsx — threaded reply row. Mounts the ReactionBar seam
 // (renders null until Pro lights it up). Indents by parent depth (cap ~3).
 
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Check, CheckCircle2, Pencil, Quote, Trash2 } from 'lucide-react-native';
 
 import ContentBody from '@/components/ContentBody';
 import VoteButton from '@/components/VoteButton';
 import ReactionBar from '@/components/ReactionBar';
 import FlagButton from '@/components/FlagButton';
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 import type { Reply } from '@/types/reply';
 
@@ -70,11 +71,7 @@ export default function ReplyItem({
 
       {/* Author row */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[2] }}>
-        {reply.author_avatar ? (
-          <Image source={{ uri: reply.author_avatar }} style={{ width: 22, height: 22, borderRadius: radius.full }} />
-        ) : (
-          <View style={{ width: 22, height: 22, borderRadius: radius.full, backgroundColor: colors.bgSubtle }} />
-        )}
+        <Avatar uri={reply.author_avatar} name={reply.author_name} size={22} />
         <Text style={{ color: colors.text, fontSize: typography.size.sm, fontWeight: typography.weight.medium as '500' }} numberOfLines={1}>
           {reply.author_name}
         </Text>

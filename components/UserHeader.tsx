@@ -2,10 +2,11 @@
 // Shared by profile.tsx (own) and user/[id].tsx (public). Accepts the common
 // subset of Me / PublicUser fields so a single component serves both.
 
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import StatPills from '@/components/StatPills';
 import TrustLevelBadge from '@/components/TrustLevelBadge';
+import Avatar from '@/components/Avatar';
 import { useTheme } from '@/theme/ThemeContext';
 
 export interface UserHeaderUser {
@@ -32,21 +33,7 @@ export default function UserHeader({ user, linkReputation }: UserHeaderProps) {
   return (
     <View style={{ gap: spacing[3] }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
-        {user.avatar_url ? (
-          <Image
-            source={{ uri: user.avatar_url }}
-            style={{ width: 64, height: 64, borderRadius: radius.full }}
-          />
-        ) : (
-          <View
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: radius.full,
-              backgroundColor: colors.bgSubtle,
-            }}
-          />
-        )}
+        <Avatar uri={user.avatar_url} name={user.display_name} size={64} />
         <View style={{ flex: 1, gap: 4 }}>
           <Text
             style={{
